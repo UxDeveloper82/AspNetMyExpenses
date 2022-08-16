@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MyExpenses.Data;
 using MyExpenses.Models;
+using MyExpenses.ViewModels;
 
 namespace MyExpenses.Controllers
 {
@@ -57,81 +58,55 @@ namespace MyExpenses.Controllers
             return View(myIncomePlusExpenses);
         }
 
-        // GET: MyIncomePlusExpenses/Create
-        public IActionResult Create()
-        {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "CategoryName");
-            return View();
-        }
-
-        // POST: MyIncomePlusExpenses/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("id,CategoryId,Date,Price")] MyIncomePlusExpenses myIncomePlusExpenses)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(myIncomePlusExpenses);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "CategoryName", myIncomePlusExpenses.CategoryId);
-            return View(myIncomePlusExpenses);
-        }
-
         // GET: MyIncomePlusExpenses/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "CategoryName");
+
             if (id == null)
             {
-                return NotFound();
+                return View(new MyIncomePlusExpensesViewModel());
             }
+           
+            else {
+                var MyExpensePlusIncome =await _context.MyIncomePlusExpenses.Include(m => m.Category).FirstOrDefaultAsync(m => m.id == id);
+           
+                return View(new MyIncomePlusExpensesViewModel
+                {
+                    id = MyExpensePlusIncome.id,
+                    Category = MyExpensePlusIncome.Category,
+                    Date = MyExpensePlusIncome.Date,
+                    Price = MyExpensePlusIncome.Price,
+                    CategoryId = MyExpensePlusIncome.CategoryId,
 
-            var myIncomePlusExpenses = await _context.MyIncomePlusExpenses.FindAsync(id);
-            if (myIncomePlusExpenses == null)
-            {
-                return NotFound();
+                });
+
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "CategoryName", myIncomePlusExpenses.CategoryId);
-            return View(myIncomePlusExpenses);
         }
 
-        // POST: MyIncomePlusExpenses/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("id,CategoryId,Date,Price")] MyIncomePlusExpenses myIncomePlusExpenses)
+        public async Task<IActionResult> Edit(MyIncomePlusExpensesViewModel vm)
         {
-            if (id != myIncomePlusExpenses.id)
+            var myexpenseplusincome = new MyIncomePlusExpenses
             {
-                return NotFound();
-            }
+                id = vm.id,
+                Category = vm.Category,
+                CategoryId = vm.CategoryId,
+                Date = vm.Date,
+                Price = vm.Price
+            };
 
-            if (ModelState.IsValid)
+            if (myexpenseplusincome.id > 0)
             {
-                try
-                {
-                    _context.Update(myIncomePlusExpenses);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!MyIncomePlusExpensesExists(myIncomePlusExpenses.id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                _context.MyIncomePlusExpenses.Update(myexpenseplusincome);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "CategoryName", myIncomePlusExpenses.CategoryId);
-            return View(myIncomePlusExpenses);
+            else {
+                _context.MyIncomePlusExpenses.Add(myexpenseplusincome);
+            }
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index");
+
         }
 
         // GET: MyIncomePlusExpenses/Delete/5
