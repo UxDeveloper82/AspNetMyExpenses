@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MyExpenses.Data;
 using MyExpenses.Models;
+using MyExpenses.ViewModels;
 
 namespace MyExpenses.Controllers
 {
@@ -43,77 +44,47 @@ namespace MyExpenses.Controllers
             return View(category);
         }
 
-        // GET: Categories/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Categories/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // GET: Categories/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,CategoryName,Type,state")] Category category)
+        public async Task<IActionResult> Edit(CategoryViewModel vm)
         {
-            if (ModelState.IsValid)
+            var category = new Category
             {
-                _context.Add(category);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                Id = vm.Id,
+                CategoryName = vm.CategoryName,
+                Type = vm.Type,
+                state = vm.state
+            };
+
+            if (category.Id > 0)
+            {
+                _context.Categories.Update(category);
             }
-            return View(category);
+            else {
+                _context.Categories.Add(category);
+            }
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index");
         }
 
-        // GET: Categories/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
-                return NotFound();
+                return View(new CategoryViewModel());
             }
-
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null)
-            {
-                return NotFound();
-            }
-            return View(category);
-        }
-
-        // POST: Categories/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryName,Type,state")] Category category)
-        {
-            if (id != category.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
+            else {
+                var category =await _context.Categories.FindAsync((int)id);
+                return View(new CategoryViewModel
                 {
-                    _context.Update(category);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CategoryExists(category.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                    Id = category.Id,
+                    CategoryName = category.CategoryName,
+                    Type = category.Type,
+                    state = category.state
+                });
             }
-            return View(category);
         }
 
         // GET: Categories/Delete/5

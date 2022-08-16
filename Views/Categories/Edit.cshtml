@@ -1,19 +1,21 @@
-﻿@model MyExpenses.Models.Category
+﻿@model MyExpenses.ViewModels.CategoryViewModel
 
 @{
-    ViewData["Title"] = "Edit";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    var Title = "Create new Category";
 }
 
-<h1>Edit</h1>
-
-<h4>Category</h4>
+<h2>@Title</h2>
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-controller="Categories" asp-action="Edit" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
+            @if (Model.Id != 0)
+            {
+                Title = "Edit Template";
+                <input type="hidden" asp-for="Id" />
+            }
+         
             <div class="form-group">
                 <label asp-for="CategoryName" class="control-label"></label>
                 <input asp-for="CategoryName" class="form-control" />
